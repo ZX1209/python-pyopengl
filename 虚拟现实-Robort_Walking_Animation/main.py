@@ -48,7 +48,7 @@ oldx = None
 oldy = None
 windowWidth = 800
 windowHeight = 800
-timerSecs = 5
+timerSecs = 2000
 
 width = 300
 high = 300
@@ -80,6 +80,12 @@ angle2 = -11
 leg1 = False
 leg2 = True
 
+z_dis = 0
+scaleLevel = 1
+
+GLUT_WHEEL_UP  = 3
+GLUT_WHEEL_DOWN  = 4
+
 # tag: basic setting here
 
 
@@ -103,9 +109,12 @@ def DisplayFunc():
     # // 设置光源
     setLight()
 
+    glScale(scaleLevel,scaleLevel,scaleLevel)
+    glRotate(30,1,2,0)
+    # glLoadIdentity()
     # 绘制
     draw_world_base_line()
-
+    glTranslate(0,0,z_dis)
     draw_body()
     draw_head()
     draw_left_leg()
@@ -133,32 +142,51 @@ def ReshapeFunc(width, height):
 
 
 def KeyboardFunc(key, x, y):
-    global anglex, angley, anglez
-    if key == b'x' or key == b'X':
-        anglex += 10
-        glutPostRedisplay()
-    elif key == b'y' or key == b'Y':
+    global anglex, angley, anglez,movex,movey,movez
+    # qe
+    if key == b'e' or key == b'E':
         angley += 10
-        glutPostRedisplay()
-    elif key == b'z' or key == b'Z':
-        anglez += 10
-        glutPostRedisplay()
+    if key == b'q' or key == b'Q':
+        angley -= 10
+
+    # wasd
+    if key == b'w' or key == b'W':
+        movey -= 0.3
+    elif key == b's' or key == b'S':
+        movey += 0.3
+    elif key == b'a' or key == b'A':
+        movex += 0.3
+    elif key == b'd' or key == b'D':
+        movex -= 0.3
+    
+    
+
+    
+
+        
+    
+    glutPostRedisplay()
+    # tag: 键盘交互 函数
     # done: basic view move
 
 
 def MouseFunc(button, state, x, y):
-    global isMoving, oldx, oldy
-    if button == GLUT_RIGHT_BUTTON and state == GLUT_DOWN:
-        isMoving = True
-        log.debug((oldx, oldy, x, y))
-    elif button == GLUT_RIGHT_BUTTON and state == GLUT_UP:
-        isMoving = False
-        oldx = None
-        oldy = None
-        glLoadIdentity()
+    global isMoving, oldx, oldy,scaleLevel
+    log.debug((button,state,x,y))
+
+    # tag: 滚轮放大缩小功能
+    if button == GLUT_WHEEL_DOWN and state == GLUT_DOWN:
+        log.debug(scaleLevel)
+        if scaleLevel>=0.1:
+            scaleLevel-=0.1
+    
+    if button == GLUT_WHEEL_UP and state == GLUT_DOWN:
+        log.debug(scaleLevel)
+        scaleLevel+=0.1
+    
 
     glutPostRedisplay()
-    # tag: mouse deal
+    # tag: 鼠标交互 函数
 
 
 def MotionFunc(x, y):
@@ -232,10 +260,13 @@ def IdleFunc():
 
 
 def TimerFunc(value):
-    global angle1, angle2, leg1, leg2, anglex, angley, anglez
+    global angle1, angle2, leg1, leg2, anglex, angley, anglez,z_dis
     # anglex += 5
     # angley += 5
     # anglez += 5
+    z_dis+=0.03
+    if z_dis>30:
+        z_dis = 0
     if angle1>=30:
         leg1=False # 向后
     elif angle1<=-10:
@@ -268,6 +299,7 @@ def TimerFunc(value):
     else:
         angle2-=dis
 
+    # tag: 定时器 函数
     glutPostRedisplay()
     glutTimerFunc(timerSecs, TimerFunc, 0)
 
@@ -322,7 +354,7 @@ def draw_body():
     """
     with freeze():
         create_cube(-2,2,0,6,-0.5,0.5)
-    
+
 
 def draw_head():
     with freeze():
@@ -348,10 +380,6 @@ def draw_left_leg():
         glTranslate(0, -0.5, 0)
         if angle1>0:glRotate(-angle1,-1,0,0)
         create_cube(-0.5,0.5,-leg_length*2,0,-0.5,0.5)
-
-
-
-    
 
 
 def draw_right_leg():
